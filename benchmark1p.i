@@ -7,7 +7,7 @@
 # Fluid bulk modulus = 2e3 MPa
 # Fluid viscosity = 1.1E-3 Pa.s = 1.1E-9 MPa.s =  1.273e-14  MPa.day
 # injection rate = 0.02 kg/s/m -> 1728kg/day/m
-# Temperature not considered - isothermal case not much effect on outputs 
+# Temperature not considered - isothermal case not much effect on outputs
 
 [Mesh]
   [file_mesh]
@@ -67,7 +67,7 @@
     type = DirichletBC
     variable = 'disp_x'
     value = 0.0
-    boundary = 'left injection_area'
+    boundary = 'left injection_area right'
   []
   [disp_bottom_y]
     type = DirichletBC
@@ -75,21 +75,21 @@
     value = 0.0
     boundary = 'bottom'
   []
-  [top_load]
-    type = Pressure
-    variable = 'disp_y'
-    boundary = 'top'
-    component = 1
-    factor = 24         #24MPa total stress
-    use_displaced_mesh = false
-  []
-  [load_right]
-    type = FunctionNeumannBC
-    variable = 'disp_x'
-    boundary = 'right'
-    function = sigma_h_total  # total insitu stress
-    use_displaced_mesh = false
-  []
+  # [top_load]
+  #   type = Pressure
+  #   variable = 'disp_y'
+  #   boundary = 'top'
+  #   component = 1
+  #   factor = 24         #24MPa total stress
+  #   use_displaced_mesh = false
+  # []
+  # [load_right]
+  #   type = FunctionNeumannBC
+  #   variable = 'disp_y'
+  #   boundary = 'right'
+  #   function = sigma_v_total  # total insitu stress
+  #   use_displaced_mesh = false
+  # []
 []
 
 
@@ -192,26 +192,37 @@
   execute_on = 'initial timestep_end'
   file_base = benchmark1p
   exodus = true
-  sync_times = '30 365 1000'
+  sync_times = '30 80 365 1000'
   [csvs]
     type = CSV
     execute_on = 'INITIAL TIMESTEP_END'
   []
 []
 
+porosity0 = 0.1
+solid_density = 2400
+fluid_density = 1000
+g=-10E-6
 
 [Functions]
   [sigma_v]
     type = ParsedFunction
-    value = '(2400*10*y - 1000*10*y)/1e6'  # MPa sigma_effective
+    #value = '(2400*10*y - 1000*10*y)/1e6'  # MPa sigma_effective
+    value = '-${g} * y * (${solid_density} - ${fluid_density}) * (1.0 - ${porosity0})'  # initial effective stress that should result from weight force
+
   []
   [sigma_h]
     type = ParsedFunction
-    value = '0.5*(2400*10*y - 1000*10*y)/1e6' # MPa   sigma_effective
+    #value = '0.5*(2400*10*y - 1000*10*y)/1e6' # MPa   sigma_effective
+    value = '-0.5*${g} * y * (${solid_density} - ${fluid_density}) * (1.0 - ${porosity0})'
   []
   [sigma_h_total]
     type = ParsedFunction
     value = '0.5*(2400*10*y)/1e6' # MPa
+  []
+  [sigma_v_total]
+    type = ParsedFunction
+    value = '(2400*10*y)/1e6' # MPa
   []
 
   [p_hydro]
