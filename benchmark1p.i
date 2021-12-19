@@ -218,10 +218,6 @@
       type = ParsedFunction
       value = '-9.81e-3*y + 0.1' # MPa 9.81 MPa/km (-ve y)
   []
-  [temp]
-      type = ParsedFunction
-      value = '-9.81e-3*y + 0.1' # MPa 9.81 MPa/km (-ve y)
-  []
 []
 
 
