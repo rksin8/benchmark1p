@@ -1,13 +1,13 @@
 # initially reservoir is fully saturated
-# unit MPa instead of Pa, second -> day
+# Unit MPa instead of Pa, second -> day
 # Pa  -> MPa.
 # viscosity Pas -> MPa day
-# injection rate: kg/m/s -> kg/m/day
 # gravity = 10e-6
 # youngs_modulus = 5 GPa = 5000 MPa
 # Fluid bulk modulus = 2e3 MPa
 # Fluid viscosity = 1.1E-3 Pa.s = 1.1E-9 MPa.s =  1.273e-14  MPa.day
-# injection rate = 0.02 kg/s/m
+# injection rate = 0.02 kg/s/m -> 1728kg/day/m
+# Temperature not considered - isothermal case not much effect on outputs 
 
 [Mesh]
   [file_mesh]
@@ -25,7 +25,6 @@
 
 [Variables]
   [pp]
-    #scaling = 1e4
   []
   [disp_x]
   []
@@ -57,7 +56,7 @@
     function = p_hydro
     boundary = 'top right bottom' # rest no flow except injection_area
   []
-
+  #instead of point source, 0.02kg/m/s injected in 10m face
   [injection]
     type = PorousFlowSink
     variable = pp
@@ -76,12 +75,6 @@
     value = 0.0
     boundary = 'bottom'
   []
-  # [disp_bottom_x]
-  #   type = DirichletBC
-  #   variable = 'disp_x'
-  #   value = 0.0
-  #   boundary = 'bottom'
-  # []
   [top_load]
     type = Pressure
     variable = 'disp_y'
@@ -91,12 +84,6 @@
     use_displaced_mesh = false
   []
   [load_right]
-  #   # type = Pressure
-  #   # variable = 'disp_x'
-  #   # boundary = 'right'
-  #   # component = 0
-  #   # factor = 14         #24MPa total stress
-  #   # use_displaced_mesh = false
     type = FunctionNeumannBC
     variable = 'disp_x'
     boundary = 'right'
@@ -124,14 +111,9 @@
 [Materials]
   # [temperature]
   #   type = PorousFlowTemperature
-  #   temperature = 333.15 # 60C
-  # []
-  # [eff_fluid_pressure]
-  # type = PorousFlowEffectiveFluidPressure
+  #   temperature = 310.15 # 35C
   # []
   [porosity_reservoir]
-    #type = PorousFlowPorosityConst
-    # porosity = 0.1
     type = PorousFlowPorosity
     fluid = true
     mechanical = true
@@ -143,12 +125,6 @@
   []
 
   [permeability]
-    # type = PorousFlowPermeabilityConst
-    # permeability = '1.0e-14 0 0   0 1.0e-14 0   0 0 1.0e-14'
-    # type = PermeabilityFromPorosity
-    # n = 13.5
-    # phi0 = 0.1
-    # k0 = '1.0e-14'
     type = PorousFlowPermeabilityKozenyCarman
     poroperm_function = kozeny_carman_phi0
     k0 = 1E-14
@@ -157,14 +133,6 @@
     m = 2
     block = 'matrix'
   []
-
-  # [biot_modulus]
-  #   type = PorousFlowConstantBiotModulus
-  #   biot_coefficient = 1
-  #   solid_bulk_compliance = 2E-13  # MPa^-1
-  #   fluid_bulk_modulus = 1E1  # MPa
-  #   block = 'matrix'
-  # []
   [elasticity_tensor_matrix]
     type = ComputeIsotropicElasticityTensor
     youngs_modulus = 5000    # MPa
@@ -189,9 +157,6 @@
     prop_names = density
     prop_values = 2400
   []
-#   [vol_strain]
-#   type = PorousFlowVolumetricStrain
-# []
 []
 
 [Preconditioning]
@@ -213,9 +178,8 @@
   l_max_its = 20
   nl_max_its = 20
 
-
   start_time = 0
-  end_time = 500  # days
+  end_time = 1800  # days
   [TimeStepper]
       type = IterationAdaptiveDT
       dt = 0.1
@@ -251,6 +215,10 @@
   []
 
   [p_hydro]
+      type = ParsedFunction
+      value = '-9.81e-3*y + 0.1' # MPa 9.81 MPa/km (-ve y)
+  []
+  [temp]
       type = ParsedFunction
       value = '-9.81e-3*y + 0.1' # MPa 9.81 MPa/km (-ve y)
   []
